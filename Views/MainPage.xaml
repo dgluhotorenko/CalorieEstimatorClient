@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CalorieClient.ViewModels"
+             xmlns:converters="clr-namespace:CalorieClient.Views.Converters"
+             xmlns:models="clr-namespace:CalorieClient.Models"
+             x:Class="CalorieClient.Views.MainPage"
+             x:DataType="vm:MainViewModel"
+             BackgroundColor="#F5F5F7">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <Style x:Key="HeaderLabel" TargetType="Label">
+                <Setter Property="TextColor" Value="#1D1D1F"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="HorizontalOptions" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto, *">
+        <HorizontalStackLayout Grid.Row="0" Padding="20,10" Spacing="10" BackgroundColor="White">
+            <Image Source="dotnet_bot.png" HeightRequest="40" WidthRequest="40"/>
+            <Label Text="CalorieAI" VerticalOptions="Center" FontSize="20" FontAttributes="Bold" TextColor="#512BD4"/>
+        </HorizontalStackLayout>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20" Padding="20">
+                <Border StrokeShape="RoundRectangle 20"
+                        StrokeThickness="0"
+                        HeightRequest="350"
+                        BackgroundColor="White"
+                        Shadow="{Shadow Brush=Black, Offset='0,5', Radius=10, Opacity=0.1}">
+                    <Grid>
+                        <Image Source="{Binding ImagePath}" 
+                               Aspect="AspectFill" 
+                               Margin="0"/>
+                        <BoxView BackgroundColor="#80000000" IsVisible="{Binding IsBusy}"/>
+                        <VerticalStackLayout VerticalOptions="Center" IsVisible="{Binding IsBusy}">
+                            <ActivityIndicator IsRunning="True" Color="White" Scale="1.5"/>
+                            <Label Text="Analyzing ingredients..." TextColor="White" HorizontalOptions="Center" Margin="0,10"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="#E0E0E0" Padding="15,5">
+                    <Entry Placeholder="Add details (sauce, ingredients, etc.)"
+                           Text="{Binding UserNotes}"
+                           FontSize="15"
+                           BackgroundColor="Transparent"/>
+                </Border>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+                    <Button Grid.Column="0" Text="Camera" 
+                            Command="{Binding TakePhotoCommand}"
+                            CornerRadius="12" HeightRequest="50"
+                            BackgroundColor="#512BD4" TextColor="White"/>
+                    
+                    <Button Grid.Column="1" Text="Gallery" 
+                            Command="{Binding PickImageCommand}"
+                            CornerRadius="12" HeightRequest="50"
+                            BackgroundColor="White" 
+                            BorderColor="#512BD4" 
+                            BorderWidth="1" 
+                            TextColor="#512BD4"/>
+                </Grid>
+
+                <VerticalStackLayout IsVisible="{Binding ShowResults}" Spacing="15">
+                    <Border StrokeShape="RoundRectangle 15" Padding="20" BackgroundColor="#512BD4" IsVisible="{Binding AnalysisResult.IsFood}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding AnalysisResult.DishName}" TextColor="White" FontSize="24" FontAttributes="Bold"/>
+                            <Label Text="{Binding AnalysisResult.TotalCalories, StringFormat='{0} kcal'}" TextColor="#E0E0E0" FontSize="18"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label Text="AI is not sure that this is food." 
+                           IsVisible="{Binding AnalysisResult.IsFood, Converter={StaticResource InvertedBoolConverter}}"
+                           TextColor="Red" HorizontalOptions="Center" FontAttributes="Bold"/>
+
+                    <Label Text="Ingredients of dish" Style="{StaticResource HeaderLabel}" 
+                           HorizontalOptions="Start" Margin="5,0"
+                           IsVisible="{Binding AnalysisResult.IsFood}"/>
+
+                    <CollectionView ItemsSource="{Binding AnalysisResult.Ingredients}"
+                                    ItemsLayout="VerticalList"
+                                    IsVisible="{Binding AnalysisResult.IsFood}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Ingredient">
+                                <Border StrokeShape="RoundRectangle 12" 
+                                        Margin="0,0,0,10" 
+                                        Padding="15" 
+                                        BackgroundColor="White"
+                                        StrokeThickness="0">
+                                    <VerticalStackLayout Spacing="5">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <Label Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" FontSize="16"/>
+                                            <Label Grid.Column="1" Text="{Binding Calories, StringFormat='{0} kcal'}" TextColor="Gray"/>
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,5,0,0">
+                                            <VerticalStackLayout Grid.Column="0">
+                                                <Label Text="Proteins" FontSize="10" TextColor="Gray"/>
+                                                <Label Text="{Binding Protein, StringFormat='{0}g'}"/>
+                                                <ProgressBar Progress="{Binding Protein, Converter={converters:MacroToProgressConverter Max=50}}" ProgressColor="Orange"/>
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1">
+                                                <Label Text="Fats" FontSize="10" TextColor="Gray"/>
+                                                <Label Text="{Binding Fat, StringFormat='{0}g'}"/>
+                                                <ProgressBar Progress="{Binding Fat, Converter={converters:MacroToProgressConverter Max=50}}" ProgressColor="Red"/>
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="2">
+                                                <Label Text="Carbs" FontSize="10" TextColor="Gray"/>
+                                                <Label Text="{Binding Carbs, StringFormat='{0}g'}"/>
+                                                <ProgressBar Progress="{Binding Carbs, Converter={converters:MacroToProgressConverter Max=100}}" ProgressColor="Green"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <Label Text="{Binding ResultText}" IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" TextColor="Gray" HorizontalOptions="Center"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
