@@ -8,6 +8,11 @@ namespace CalorieClient;
 
 public static class MauiProgram
 {
+    // IMPORTANT: Replace this with your actual API URL!
+    // For Android emulator: "http://10.0.2.2:PORT_NUMBER"
+    // For iOS real device: your Dev Tunnel URL (https://....devtunnels.ms)
+    private const string ApiBaseUrl = "http://10.0.2.2:5064";
+
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
@@ -23,7 +28,12 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        builder.Services.AddSingleton<ICalorieService, CalorieService>();
+        builder.Services.AddHttpClient<ICalorieService, CalorieService>(client =>
+        {
+            client.BaseAddress = new Uri(ApiBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();
 

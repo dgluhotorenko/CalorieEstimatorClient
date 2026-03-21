@@ -28,50 +28,45 @@ public partial class MainViewModel(ICalorieService calorieService) : ObservableO
     [RelayCommand]
     private async Task PickImage()
     {
-        try
-        {
-            var photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 })).FirstOrDefault();
+        var photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 })).FirstOrDefault();
 
-            if (photo != null)
-            {
-                ImagePath = photo.FullPath;
-                IsBusy = true;
-                ResultText = "Analyzing...";
-                AnalysisResult = null;
-
-                // Send to API
-                AnalysisResult = await calorieService.AnalyzeImageAsync(photo, UserNotes);
-
-                if (AnalysisResult != null)
-                {
-                    ResultText = AnalysisResult.IsFood ? $"Ready! This is {AnalysisResult.DishName}" : "This doesn't look like food :(";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ResultText = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        if (photo != null)
+            await AnalyzeAsync(photo);
     }
 
     [RelayCommand]
     private async Task TakePhoto()
     {
-        if (MediaPicker.Default.IsCaptureSupported)
+        if (!MediaPicker.Default.IsCaptureSupported)
+            return;
+
+        var photo = await MediaPicker.Default.CapturePhotoAsync();
+
+        if (photo != null)
+            await AnalyzeAsync(photo);
+    }
+
+    private async Task AnalyzeAsync(FileResult photo)
+    {
+        ImagePath = photo.FullPath;
+        IsBusy = true;
+        ResultText = "Analyzing...";
+        AnalysisResult = null;
+
+        var result = await calorieService.AnalyzeImageAsync(photo, UserNotes);
+
+        if (result.IsSuccess)
         {
-            var photo = await MediaPicker.Default.CapturePhotoAsync();
-            if (photo != null)
-            {
-                ImagePath = photo.FullPath;
-                // move to separated method Analyze(FileResult file))
-                IsBusy = true;
-                AnalysisResult = await calorieService.AnalyzeImageAsync(photo, UserNotes);
-                IsBusy = false;
-            }
+            AnalysisResult = result.Value;
+            ResultText = AnalysisResult!.IsFood
+                ? $"Ready! This is {AnalysisResult.DishName}"
+                : "This doesn't look like food :(";
         }
+        else
+        {
+            ResultText = result.Error;
+        }
+
+        IsBusy = false;
     }
 }

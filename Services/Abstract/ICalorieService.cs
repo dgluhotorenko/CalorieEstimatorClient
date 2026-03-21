@@ -4,5 +4,5 @@ namespace CalorieClient.Services.Abstract;
 
 public interface ICalorieService
 {
-    Task<FoodAnalysisResult?> AnalyzeImageAsync(FileResult file, string? notes);
+    Task<Result<FoodAnalysisResult>> AnalyzeImageAsync(FileResult file, string? notes);
 }
