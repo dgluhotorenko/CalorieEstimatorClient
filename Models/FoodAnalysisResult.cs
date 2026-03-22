@@ -21,4 +21,13 @@ public record FoodAnalysisResult
 
     [JsonIgnore]
     public int UsageTotalTokens { get; set; }
+
+    [JsonIgnore]
+    public double TotalProtein => Ingredients.Sum(i => i.Protein);
+
+    [JsonIgnore]
+    public double TotalFat => Ingredients.Sum(i => i.Fat);
+
+    [JsonIgnore]
+    public double TotalCarbs => Ingredients.Sum(i => i.Carbs);
 }

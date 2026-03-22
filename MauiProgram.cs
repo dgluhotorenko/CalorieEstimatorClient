@@ -34,8 +34,13 @@ public static class MauiProgram
             client.Timeout = TimeSpan.FromSeconds(30);
         });
 
+        builder.Services.AddSingleton<IHistoryService, HistoryService>();
+
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<MainPage>();
+
+        builder.Services.AddSingleton<HistoryViewModel>();
+        builder.Services.AddSingleton<HistoryPage>();
 
         return builder.Build();
     }

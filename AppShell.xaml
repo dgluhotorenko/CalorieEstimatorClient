@@ -3,13 +3,17 @@
     x:Class="CalorieClient.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:CalorieClient"
     xmlns:views="clr-namespace:CalorieClient.Views"
     Title="CalorieClient">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate views:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent Title="Analyze" Icon="dotnet_bot.png"
+                      ContentTemplate="{DataTemplate views:MainPage}"
+                      Route="MainPage"/>
+
+        <ShellContent Title="History" Icon="dotnet_bot.png"
+                      ContentTemplate="{DataTemplate views:HistoryPage}"
+                      Route="HistoryPage"/>
+    </TabBar>
 
 </Shell>

@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace CalorieClient.ViewModels;
 
-public partial class MainViewModel(ICalorieService calorieService) : ObservableObject
+public partial class MainViewModel(ICalorieService calorieService, IHistoryService historyService) : ObservableObject
 {
     [ObservableProperty]
     private string? _imagePath;
@@ -61,6 +61,12 @@ public partial class MainViewModel(ICalorieService calorieService) : ObservableO
             ResultText = AnalysisResult!.IsFood
                 ? $"Ready! This is {AnalysisResult.DishName}"
                 : "This doesn't look like food :(";
+
+            if (AnalysisResult.IsFood)
+            {
+                var entry = HistoryEntry.FromAnalysisResult(AnalysisResult, ImagePath);
+                await historyService.SaveAsync(entry);
+            }
         }
         else
         {

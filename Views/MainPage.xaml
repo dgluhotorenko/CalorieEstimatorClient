@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:CalorieClient.ViewModels"
              xmlns:converters="clr-namespace:CalorieClient.Views.Converters"
+             xmlns:controls="clr-namespace:CalorieClient.Views.Controls"
              xmlns:models="clr-namespace:CalorieClient.Models"
              x:Class="CalorieClient.Views.MainPage"
              x:DataType="vm:MainViewModel"
@@ -11,6 +12,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <converters:ConfidenceToColorConverter x:Key="ConfidenceToColorConverter"/>
             <Style x:Key="HeaderLabel" TargetType="Label">
                 <Setter Property="TextColor" Value="#1D1D1F"/>
                 <Setter Property="FontAttributes" Value="Bold"/>
@@ -68,17 +70,63 @@
 
                 <VerticalStackLayout IsVisible="{Binding ShowResults}" Spacing="15">
                     <Border StrokeShape="RoundRectangle 15" Padding="20" BackgroundColor="#512BD4" IsVisible="{Binding AnalysisResult.IsFood}">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding AnalysisResult.DishName}" TextColor="White" FontSize="24" FontAttributes="Bold"/>
-                            <Label Text="{Binding AnalysisResult.TotalCalories, StringFormat='{0} kcal'}" TextColor="#E0E0E0" FontSize="18"/>
-                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto" ColumnSpacing="15">
+                            <!-- Dish name -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding AnalysisResult.DishName}"
+                                   TextColor="White" FontSize="22" FontAttributes="Bold"
+                                   MaxLines="2" LineBreakMode="TailTruncation"/>
+
+                            <!-- Total calories -->
+                            <Label Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding AnalysisResult.TotalCalories, StringFormat='{0} kcal'}"
+                                   TextColor="#E0E0E0" FontSize="16" Margin="0,2,0,0"/>
+
+                            <!-- Confidence badge -->
+                            <Border Grid.Row="2" Grid.Column="0"
+                                    StrokeShape="RoundRectangle 8"
+                                    StrokeThickness="0"
+                                    BackgroundColor="{Binding AnalysisResult.ConfidenceScore, Converter={StaticResource ConfidenceToColorConverter}}"
+                                    HorizontalOptions="Start"
+                                    Padding="10,4"
+                                    Margin="0,6,0,0">
+                                <Label Text="{Binding AnalysisResult.ConfidenceScore, StringFormat='Confidence: {0}/10'}"
+                                       TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                            </Border>
+
+                            <!-- Macro legend -->
+                            <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Spacing="12" Margin="0,8,0,0">
+                                <HorizontalStackLayout Spacing="4">
+                                    <Ellipse Fill="#FF9500" WidthRequest="10" HeightRequest="10" VerticalOptions="Center"/>
+                                    <Label Text="{Binding AnalysisResult.TotalProtein, StringFormat='P {0:F0}g'}" TextColor="#E0E0E0" FontSize="11"/>
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="4">
+                                    <Ellipse Fill="#FF3B30" WidthRequest="10" HeightRequest="10" VerticalOptions="Center"/>
+                                    <Label Text="{Binding AnalysisResult.TotalFat, StringFormat='F {0:F0}g'}" TextColor="#E0E0E0" FontSize="11"/>
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="4">
+                                    <Ellipse Fill="#34C759" WidthRequest="10" HeightRequest="10" VerticalOptions="Center"/>
+                                    <Label Text="{Binding AnalysisResult.TotalCarbs, StringFormat='C {0:F0}g'}" TextColor="#E0E0E0" FontSize="11"/>
+                                </HorizontalStackLayout>
+                            </HorizontalStackLayout>
+
+                            <!-- Donut chart -->
+                            <controls:DonutChartView Grid.Row="0" Grid.RowSpan="4" Grid.Column="1"
+                                                     Protein="{Binding AnalysisResult.TotalProtein}"
+                                                     Fat="{Binding AnalysisResult.TotalFat}"
+                                                     Carbs="{Binding AnalysisResult.TotalCarbs}"
+                                                     CenterText="{Binding AnalysisResult.TotalCalories, StringFormat='{0}'}"
+                                                     WidthRequest="110" HeightRequest="110"
+                                                     Margin="0,5"
+                                                     VerticalOptions="Center"/>
+                        </Grid>
                     </Border>
 
-                    <Label Text="AI is not sure that this is food." 
+                    <Label Text="AI is not sure that this is food."
                            IsVisible="{Binding AnalysisResult.IsFood, Converter={StaticResource InvertedBoolConverter}}"
                            TextColor="Red" HorizontalOptions="Center" FontAttributes="Bold"/>
 
-                    <Label Text="Ingredients of dish" Style="{StaticResource HeaderLabel}" 
+                    <Label Text="Ingredients" Style="{StaticResource HeaderLabel}"
                            HorizontalOptions="Start" Margin="5,0"
                            IsVisible="{Binding AnalysisResult.IsFood}"/>
 

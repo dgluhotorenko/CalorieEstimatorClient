@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:CalorieClient.ViewModels"
+             xmlns:models="clr-namespace:CalorieClient.Models"
+             x:Class="CalorieClient.Views.HistoryPage"
+             x:DataType="vm:HistoryViewModel"
+             xmlns:converters="clr-namespace:CalorieClient.Views.Converters"
+             BackgroundColor="#F5F5F7">
+
+    <ContentPage.Resources>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto, *">
+        <HorizontalStackLayout Grid.Row="0" Padding="20,10" Spacing="10" BackgroundColor="White">
+            <Image Source="dotnet_bot.png" HeightRequest="40" WidthRequest="40"/>
+            <Label Text="History" VerticalOptions="Center" FontSize="20" FontAttributes="Bold" TextColor="#512BD4"/>
+        </HorizontalStackLayout>
+
+        <!-- Empty state -->
+        <VerticalStackLayout Grid.Row="1"
+                             IsVisible="{Binding IsEmpty}"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="10">
+            <Label Text="No analyses yet" FontSize="18" TextColor="Gray" HorizontalOptions="Center"/>
+            <Label Text="Take a photo of your meal to get started" FontSize="14" TextColor="LightGray" HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+
+        <!-- History list -->
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Entries}"
+                        IsVisible="{Binding IsEmpty, Converter={StaticResource InvertedBoolConverter}}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:HistoryEntry">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Delete"
+                                           BackgroundColor="#FF3B30"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HistoryViewModel}}, Path=DeleteEntryCommand}"
+                                           CommandParameter="{Binding .}"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Border StrokeShape="RoundRectangle 15"
+                                StrokeThickness="0"
+                                BackgroundColor="White"
+                                Margin="20,5"
+                                Padding="15">
+                            <Grid ColumnDefinitions="70, *" ColumnSpacing="15">
+                                <!-- Thumbnail -->
+                                <Border Grid.Column="0"
+                                        StrokeShape="RoundRectangle 10"
+                                        StrokeThickness="0"
+                                        HeightRequest="70" WidthRequest="70">
+                                    <Image Source="{Binding ImagePath}"
+                                           Aspect="AspectFill"/>
+                                </Border>
+
+                                <!-- Details -->
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                    <Label Text="{Binding DishName}"
+                                           FontSize="16" FontAttributes="Bold"
+                                           MaxLines="1" LineBreakMode="TailTruncation"/>
+
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding TotalCalories, StringFormat='{0} kcal'}"
+                                               FontSize="14" TextColor="#512BD4" FontAttributes="Bold"/>
+                                        <Label Text="{Binding ConfidenceScore, StringFormat='({0}/10)'}"
+                                               FontSize="12" TextColor="Gray" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="10">
+                                        <Label Text="{Binding TotalProtein, StringFormat='P {0:F0}g'}" FontSize="11" TextColor="#FF9500"/>
+                                        <Label Text="{Binding TotalFat, StringFormat='F {0:F0}g'}" FontSize="11" TextColor="#FF3B30"/>
+                                        <Label Text="{Binding TotalCarbs, StringFormat='C {0:F0}g'}" FontSize="11" TextColor="#34C759"/>
+                                    </HorizontalStackLayout>
+
+                                    <Label Text="{Binding AnalyzedAt, StringFormat='{0:MMM dd, yyyy  HH:mm}'}"
+                                           FontSize="10" TextColor="LightGray"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
