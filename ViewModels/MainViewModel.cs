@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using CalorieClient.Models;
 using CalorieClient.Services.Abstract;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -53,6 +54,25 @@ public partial class MainViewModel(ICalorieService calorieService, IHistoryServi
         ResultText = "Analyzing...";
         AnalysisResult = null;
 
+        var imageHash = await ComputeHashAsync(photo.FullPath);
+
+        // Check cache — skip API call if we've seen this image before
+        var cached = await historyService.FindByHashAsync(imageHash);
+        if (cached != null)
+        {
+            AnalysisResult = new FoodAnalysisResult
+            {
+                IsFood = true,
+                DishName = cached.DishName,
+                TotalCalories = cached.TotalCalories,
+                ConfidenceScore = cached.ConfidenceScore,
+                Ingredients = cached.Ingredients
+            };
+            ResultText = $"Ready! This is {cached.DishName} (cached)";
+            IsBusy = false;
+            return;
+        }
+
         var result = await calorieService.AnalyzeImageAsync(photo, UserNotes);
 
         if (result.IsSuccess)
@@ -64,7 +84,7 @@ public partial class MainViewModel(ICalorieService calorieService, IHistoryServi
 
             if (AnalysisResult.IsFood)
             {
-                var entry = HistoryEntry.FromAnalysisResult(AnalysisResult, ImagePath);
+                var entry = HistoryEntry.FromAnalysisResult(AnalysisResult, ImagePath, imageHash);
                 await historyService.SaveAsync(entry);
             }
         }
@@ -74,5 +94,12 @@ public partial class MainViewModel(ICalorieService calorieService, IHistoryServi
         }
 
         IsBusy = false;
+    }
+
+    private static async Task<string> ComputeHashAsync(string filePath)
+    {
+        await using var stream = File.OpenRead(filePath);
+        var hashBytes = await SHA256.HashDataAsync(stream);
+        return Convert.ToHexString(hashBytes);
     }
 }

@@ -18,6 +18,9 @@ public class HistoryService : IHistoryService
     public async Task<List<HistoryEntry>> GetAllAsync() =>
         await _db.Table<HistoryEntry>().OrderByDescending(e => e.AnalyzedAt).ToListAsync();
 
+    public async Task<HistoryEntry?> FindByHashAsync(string hash) =>
+        await _db.Table<HistoryEntry>().FirstOrDefaultAsync(e => e.ImageHash == hash);
+
     public async Task SaveAsync(HistoryEntry entry) =>
         await _db.InsertAsync(entry);
 
