@@ -12,9 +12,9 @@ A cross-platform mobile app built with .NET MAUI that estimates nutritional cont
 ## Screenshots
 
 <p>
-  <img width="240" alt="Ingredients breakdown" src="https://github.com/user-attachments/assets/09475f4b-cc6f-4858-8b4b-4196ef5d0522" />
-  <img width="240" alt="Not food detection" src="https://github.com/user-attachments/assets/5ea740c2-b4fe-4737-8624-f4f41f5ecd54" />
-  <img width="240" alt="Notes feature" src="https://github.com/user-attachments/assets/0debe030-7888-46c6-bb45-177a8911d6e2" />
+  <img width="320" alt="Load image screen" alt="Screenshot_20260419_185738" src="https://github.com/user-attachments/assets/6a715e54-e044-4e3c-80c5-5ece875cfc5b" />
+  <img width="320" alt="Notes chart" alt="Screenshot_20260419_185902" src="https://github.com/user-attachments/assets/4509c8e0-338a-4e9e-89d0-1581b9682e84" />
+  <img width="320" alt="Notes details" alt="Screenshot_20260419_185936" src="https://github.com/user-attachments/assets/6b929df4-108c-46d5-b2c1-9e0823bf91a9" />
 </p>
 
 ## Tech Stack
