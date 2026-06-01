@@ -13,9 +13,11 @@ A cross-platform mobile app built with .NET MAUI that estimates nutritional cont
 ## Screenshots
 
 <p>
+  <img width="320" alt="Load image screen" src="https://raw.githubusercontent.com/dgluhotorenko/CalorieEstimatorClient/master/docs/icon.png" />
   <img width="320" alt="Load image screen" src="https://raw.githubusercontent.com/dgluhotorenko/CalorieEstimatorClient/master/docs/load_image_screen.png" />
   <img width="320" alt="Result chart" src="https://raw.githubusercontent.com/dgluhotorenko/CalorieEstimatorClient/master/docs/result_chart.png" />
   <img width="320" alt="Result details" src="https://raw.githubusercontent.com/dgluhotorenko/CalorieEstimatorClient/master/docs/result_details.png" />
+  <img width="320" alt="Result details" src="https://raw.githubusercontent.com/dgluhotorenko/CalorieEstimatorClient/master/docs/history.png" />
 </p>
 
 ## Tech Stack
