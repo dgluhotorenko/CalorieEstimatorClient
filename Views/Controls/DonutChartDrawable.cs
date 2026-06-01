@@ -7,17 +7,19 @@ public class DonutChartDrawable : IDrawable
     public float Carbs { get; set; }
     public string CenterText { get; set; } = "";
 
-    private static readonly Color ProteinColor = Color.FromArgb("#FF9500");
-    private static readonly Color FatColor = Color.FromArgb("#FF3B30");
-    private static readonly Color CarbsColor = Color.FromArgb("#34C759");
-    private static readonly Color EmptyColor = Color.FromArgb("#E0E0E0");
+    // Sprig macro palette: lavender / coral / teal
+    private static readonly Color ProteinColor = Color.FromArgb("#8B7BD8");
+    private static readonly Color FatColor = Color.FromArgb("#E68A6B");
+    private static readonly Color CarbsColor = Color.FromArgb("#3DAEA4");
+    // Faint translucent track — reads well on the green hero card
+    private static readonly Color TrackColor = Color.FromRgba(255, 255, 255, 38);
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
         var size = Math.Min(dirtyRect.Width, dirtyRect.Height);
         var centerX = dirtyRect.Width / 2;
         var centerY = dirtyRect.Height / 2;
-        var strokeWidth = size * 0.15f;
+        var strokeWidth = size * 0.13f;
         // Enough inset so the stroke is never clipped
         var radius = (size - strokeWidth) / 2 - 2;
 
@@ -35,17 +37,16 @@ public class DonutChartDrawable : IDrawable
             radius * 2,
             radius * 2);
 
-        if (total <= 0)
+        // Track ring
+        canvas.StrokeColor = TrackColor;
+        canvas.StrokeSize = strokeWidth;
+        canvas.StrokeLineCap = LineCap.Butt;
+        canvas.DrawEllipse(rect);
+
+        if (total > 0)
         {
-            canvas.StrokeColor = EmptyColor;
-            canvas.StrokeSize = strokeWidth;
-            canvas.StrokeLineCap = LineCap.Butt;
-            canvas.DrawEllipse(rect);
-        }
-        else
-        {
-            var startAngle = -90f;
-            var gap = 3f;
+            const float startAngle = -90f;
+            const float gap = 4f;
 
             var proteinSweep = proteinCal / total * 360f;
             var fatSweep = fatCal / total * 360f;
@@ -56,13 +57,19 @@ public class DonutChartDrawable : IDrawable
             DrawArc(canvas, rect, strokeWidth, startAngle + proteinSweep + fatSweep, carbsSweep, gap, CarbsColor);
         }
 
-        // Center text
+        // Center: big number + "KCAL" caption
         if (!string.IsNullOrEmpty(CenterText))
         {
-            canvas.FontSize = size * 0.18f;
+            var numberRect = new RectF(rect.X, centerY - size * 0.28f, rect.Width, size * 0.42f);
             canvas.FontColor = Colors.White;
-            canvas.Font = Microsoft.Maui.Graphics.Font.Default;
-            canvas.DrawString(CenterText, rect, HorizontalAlignment.Center, VerticalAlignment.Center);
+            canvas.Font = new Microsoft.Maui.Graphics.Font("HankenExtraBold");
+            canvas.FontSize = size * 0.22f;
+            canvas.DrawString(CenterText, numberRect, HorizontalAlignment.Center, VerticalAlignment.Center);
+
+            var labelRect = new RectF(rect.X, centerY + size * 0.06f, rect.Width, size * 0.18f);
+            canvas.Font = new Microsoft.Maui.Graphics.Font("HankenBold");
+            canvas.FontSize = size * 0.085f;
+            canvas.DrawString("KCAL", labelRect, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
     }
 
@@ -76,7 +83,7 @@ public class DonutChartDrawable : IDrawable
 
         canvas.StrokeColor = color;
         canvas.StrokeSize = strokeWidth;
-        canvas.StrokeLineCap = LineCap.Butt;
+        canvas.StrokeLineCap = LineCap.Round;
         canvas.DrawArc(rect, startAngle + offset, startAngle + offset + actualSweep, false, false);
     }
 }

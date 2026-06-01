@@ -20,8 +20,11 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddFont("HankenGrotesk-Regular.ttf", "HankenRegular");
+                fonts.AddFont("HankenGrotesk-Medium.ttf", "HankenMedium");
+                fonts.AddFont("HankenGrotesk-SemiBold.ttf", "HankenSemiBold");
+                fonts.AddFont("HankenGrotesk-Bold.ttf", "HankenBold");
+                fonts.AddFont("HankenGrotesk-ExtraBold.ttf", "HankenExtraBold");
             });
 
 #if DEBUG

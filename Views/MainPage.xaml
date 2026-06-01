@@ -7,159 +7,238 @@
              xmlns:models="clr-namespace:CalorieClient.Models"
              x:Class="CalorieClient.Views.MainPage"
              x:DataType="vm:MainViewModel"
-             BackgroundColor="#F5F5F7">
+             BackgroundColor="{AppThemeBinding Light={StaticResource Bg}, Dark={StaticResource DarkBg}}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
-            <converters:ConfidenceToColorConverter x:Key="ConfidenceToColorConverter"/>
-            <Style x:Key="HeaderLabel" TargetType="Label">
-                <Setter Property="TextColor" Value="#1D1D1F"/>
-                <Setter Property="FontAttributes" Value="Bold"/>
-                <Setter Property="HorizontalOptions" Value="Center"/>
-            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, *">
-        <HorizontalStackLayout Grid.Row="0" Padding="20,10" Spacing="10" BackgroundColor="White">
-            <Image Source="dotnet_bot.png" HeightRequest="40" WidthRequest="40"/>
-            <Label Text="CalorieAI" VerticalOptions="Center" FontSize="20" FontAttributes="Bold" TextColor="#512BD4"/>
-        </HorizontalStackLayout>
+
+        <!-- App bar -->
+        <controls:AppBar Grid.Row="0"/>
 
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Spacing="20" Padding="20">
+            <VerticalStackLayout Spacing="16" Padding="20,8,20,28">
+
+                <!-- Screen title -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Analyze a meal" Style="{StaticResource ScreenTitle}"/>
+                    <Label Text="Snap a photo — get calories and macros in seconds."
+                           Style="{StaticResource Body}"/>
+                </VerticalStackLayout>
+
+                <!-- Photo dropzone -->
                 <Border StrokeShape="RoundRectangle 20"
-                        StrokeThickness="0"
-                        HeightRequest="350"
-                        BackgroundColor="White"
-                        Shadow="{Shadow Brush=Black, Offset='0,5', Radius=10, Opacity=0.1}">
+                        StrokeThickness="1"
+                        Stroke="{AppThemeBinding Light={StaticResource Line}, Dark={StaticResource DarkLine}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface2}, Dark={StaticResource DarkSurface2}}"
+                        HeightRequest="320">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding PickImageCommand}"/>
+                    </Border.GestureRecognizers>
                     <Grid>
-                        <Image Source="{Binding ImagePath}" 
-                               Aspect="AspectFill" 
-                               Margin="0"/>
-                        <BoxView BackgroundColor="#80000000" IsVisible="{Binding IsBusy}"/>
-                        <VerticalStackLayout VerticalOptions="Center" IsVisible="{Binding IsBusy}">
-                            <ActivityIndicator IsRunning="True" Color="White" Scale="1.5"/>
-                            <Label Text="Analyzing ingredients..." TextColor="White" HorizontalOptions="Center" Margin="0,10"/>
+                        <!-- Placeholder -->
+                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="14"
+                                             IsVisible="{Binding HasImage, Converter={StaticResource InvertedBoolConverter}}">
+                            <Image Source="ic_camera_muted.png" HeightRequest="40" WidthRequest="40" HorizontalOptions="Center"/>
+                            <Label Text="TAP TO ADD A PHOTO" Style="{StaticResource SectionLabel}" HorizontalOptions="Center"/>
                         </VerticalStackLayout>
+
+                        <!-- Selected image -->
+                        <Image Source="{Binding ImagePath}" Aspect="AspectFill" IsVisible="{Binding HasImage}"/>
+
+                        <!-- Busy overlay -->
+                        <Grid IsVisible="{Binding IsBusy}" BackgroundColor="#660C5C33">
+                            <VerticalStackLayout VerticalOptions="Center" Spacing="12">
+                                <ActivityIndicator IsRunning="{Binding IsBusy}" Color="White" HeightRequest="36"/>
+                                <Label Text="Analyzing ingredients…" TextColor="White"
+                                       FontFamily="HankenSemiBold" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Grid>
                     </Grid>
                 </Border>
 
-                <Border StrokeShape="RoundRectangle 12" StrokeThickness="1" Stroke="#E0E0E0" Padding="15,5">
-                    <Entry Placeholder="Add details (sauce, ingredients, etc.)"
-                           Text="{Binding UserNotes}"
-                           FontSize="15"
-                           BackgroundColor="Transparent"/>
+                <!-- Details field -->
+                <Border StrokeShape="RoundRectangle 15"
+                        StrokeThickness="1"
+                        Stroke="{AppThemeBinding Light={StaticResource Line}, Dark={StaticResource DarkLine}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource DarkSurface}}"
+                        Padding="14,2">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="10">
+                        <Image Grid.Column="0" Source="ic_details.png" HeightRequest="20" WidthRequest="20" VerticalOptions="Center"/>
+                        <Entry Grid.Column="1"
+                               Placeholder="Add details — sauce, sides, portion…"
+                               Text="{Binding UserNotes}"
+                               Style="{StaticResource DetailsEntry}"/>
+                    </Grid>
                 </Border>
 
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
-                    <Button Grid.Column="0" Text="Camera" 
+                <!-- Step 1 actions — no photo yet -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12"
+                      IsVisible="{Binding HasImage, Converter={StaticResource InvertedBoolConverter}}">
+                    <Button Grid.Column="0" Text="Camera"
                             Command="{Binding TakePhotoCommand}"
-                            CornerRadius="12" HeightRequest="50"
-                            BackgroundColor="#512BD4" TextColor="White"/>
-                    
-                    <Button Grid.Column="1" Text="Gallery" 
+                            Style="{StaticResource PrimaryButton}"
+                            ImageSource="ic_camera_white.png"
+                            ContentLayout="Left,9"/>
+                    <Button Grid.Column="1" Text="Gallery"
                             Command="{Binding PickImageCommand}"
-                            CornerRadius="12" HeightRequest="50"
-                            BackgroundColor="White" 
-                            BorderColor="#512BD4" 
-                            BorderWidth="1" 
-                            TextColor="#512BD4"/>
+                            Style="{StaticResource OutlineButton}"
+                            ImageSource="ic_gallery_ink.png"
+                            ContentLayout="Left,9"/>
                 </Grid>
 
-                <VerticalStackLayout IsVisible="{Binding ShowResults}" Spacing="15">
-                    <Border StrokeShape="RoundRectangle 15" Padding="20" BackgroundColor="#512BD4" IsVisible="{Binding AnalysisResult.IsFood}">
-                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto" ColumnSpacing="15">
-                            <!-- Dish name -->
-                            <Label Grid.Row="0" Grid.Column="0"
+                <!-- Step 2 actions — photo staged, ready to estimate -->
+                <VerticalStackLayout IsVisible="{Binding HasImage}" Spacing="12">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Grid.Column="0" Text="Retake"
+                                Command="{Binding TakePhotoCommand}"
+                                Style="{StaticResource OutlineButton}"
+                                ImageSource="ic_camera_ink.png"
+                                ContentLayout="Left,9"/>
+                        <Button Grid.Column="1" Text="Gallery"
+                                Command="{Binding PickImageCommand}"
+                                Style="{StaticResource OutlineButton}"
+                                ImageSource="ic_gallery_ink.png"
+                                ContentLayout="Left,9"/>
+                    </Grid>
+                    <Button Text="Estimate calories"
+                            Command="{Binding EstimateCaloriesCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            HeightRequest="54"/>
+                </VerticalStackLayout>
+
+                <!-- Results -->
+                <VerticalStackLayout IsVisible="{Binding ShowResults}" Spacing="16" Margin="0,4,0,0">
+
+                    <!-- Hero result card -->
+                    <Border Style="{StaticResource HeroCard}"
+                            Background="{StaticResource HeroGradient}"
+                            IsVisible="{Binding AnalysisResult.IsFood}">
+                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto" ColumnSpacing="12" RowSpacing="0">
+
+                            <Label Grid.Row="0" Grid.Column="0" Text="ESTIMATED TOTAL"
+                                   Style="{StaticResource SectionLabel}" TextColor="#BFE6CF"/>
+
+                            <Label Grid.Row="1" Grid.Column="0"
                                    Text="{Binding AnalysisResult.DishName}"
-                                   TextColor="White" FontSize="22" FontAttributes="Bold"
+                                   TextColor="White" FontFamily="HankenExtraBold" FontSize="22"
+                                   CharacterSpacing="-0.4" Margin="0,4,0,0"
                                    MaxLines="2" LineBreakMode="TailTruncation"/>
 
-                            <!-- Total calories -->
-                            <Label Grid.Row="1" Grid.Column="0"
-                                   Text="{Binding AnalysisResult.TotalCalories, StringFormat='{0} kcal'}"
-                                   TextColor="#E0E0E0" FontSize="16" Margin="0,2,0,0"/>
-
-                            <!-- Confidence badge -->
+                            <!-- Confidence chip -->
                             <Border Grid.Row="2" Grid.Column="0"
-                                    StrokeShape="RoundRectangle 8"
                                     StrokeThickness="0"
-                                    BackgroundColor="{Binding AnalysisResult.ConfidenceScore, Converter={StaticResource ConfidenceToColorConverter}}"
+                                    BackgroundColor="#29FFFFFF"
                                     HorizontalOptions="Start"
-                                    Padding="10,4"
-                                    Margin="0,6,0,0">
-                                <Label Text="{Binding AnalysisResult.ConfidenceScore, StringFormat='Confidence: {0}/10'}"
-                                       TextColor="White" FontSize="12" FontAttributes="Bold"/>
+                                    Padding="10,5"
+                                    Margin="0,12,0,0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="999"/>
+                                </Border.StrokeShape>
+                                <HorizontalStackLayout Spacing="6">
+                                    <Image Source="ic_check_white.png" HeightRequest="13" WidthRequest="13" VerticalOptions="Center"/>
+                                    <Label Text="{Binding AnalysisResult.ConfidenceScore, StringFormat='Confidence · {0}/10'}"
+                                           TextColor="White" FontFamily="HankenBold" FontSize="12"/>
+                                </HorizontalStackLayout>
                             </Border>
 
                             <!-- Macro legend -->
-                            <HorizontalStackLayout Grid.Row="3" Grid.Column="0" Spacing="12" Margin="0,8,0,0">
-                                <HorizontalStackLayout Spacing="4">
-                                    <Ellipse Fill="#FF9500" WidthRequest="10" HeightRequest="10" VerticalOptions="Center"/>
-                                    <Label Text="{Binding AnalysisResult.TotalProtein, StringFormat='P {0:F0}g'}" TextColor="#E0E0E0" FontSize="11"/>
+                            <VerticalStackLayout Grid.Row="3" Grid.Column="0" Spacing="7" Margin="0,14,0,0">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Ellipse Fill="{StaticResource Protein}" WidthRequest="9" HeightRequest="9" VerticalOptions="Center"/>
+                                    <Label Text="Protein" TextColor="#CFE9D9" FontFamily="HankenMedium" FontSize="13" WidthRequest="54"/>
+                                    <Label Text="{Binding AnalysisResult.TotalProtein, StringFormat='{0:F0} g'}" TextColor="White" FontFamily="HankenBold" FontSize="13"/>
                                 </HorizontalStackLayout>
-                                <HorizontalStackLayout Spacing="4">
-                                    <Ellipse Fill="#FF3B30" WidthRequest="10" HeightRequest="10" VerticalOptions="Center"/>
-                                    <Label Text="{Binding AnalysisResult.TotalFat, StringFormat='F {0:F0}g'}" TextColor="#E0E0E0" FontSize="11"/>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Ellipse Fill="{StaticResource Fat}" WidthRequest="9" HeightRequest="9" VerticalOptions="Center"/>
+                                    <Label Text="Fat" TextColor="#CFE9D9" FontFamily="HankenMedium" FontSize="13" WidthRequest="54"/>
+                                    <Label Text="{Binding AnalysisResult.TotalFat, StringFormat='{0:F0} g'}" TextColor="White" FontFamily="HankenBold" FontSize="13"/>
                                 </HorizontalStackLayout>
-                                <HorizontalStackLayout Spacing="4">
-                                    <Ellipse Fill="#34C759" WidthRequest="10" HeightRequest="10" VerticalOptions="Center"/>
-                                    <Label Text="{Binding AnalysisResult.TotalCarbs, StringFormat='C {0:F0}g'}" TextColor="#E0E0E0" FontSize="11"/>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Ellipse Fill="{StaticResource Carbs}" WidthRequest="9" HeightRequest="9" VerticalOptions="Center"/>
+                                    <Label Text="Carbs" TextColor="#CFE9D9" FontFamily="HankenMedium" FontSize="13" WidthRequest="54"/>
+                                    <Label Text="{Binding AnalysisResult.TotalCarbs, StringFormat='{0:F0} g'}" TextColor="White" FontFamily="HankenBold" FontSize="13"/>
                                 </HorizontalStackLayout>
-                            </HorizontalStackLayout>
+                            </VerticalStackLayout>
 
-                            <!-- Donut chart -->
+                            <!-- Donut -->
                             <controls:DonutChartView Grid.Row="0" Grid.RowSpan="4" Grid.Column="1"
                                                      Protein="{Binding AnalysisResult.TotalProtein}"
                                                      Fat="{Binding AnalysisResult.TotalFat}"
                                                      Carbs="{Binding AnalysisResult.TotalCarbs}"
                                                      CenterText="{Binding AnalysisResult.TotalCalories, StringFormat='{0}'}"
-                                                     WidthRequest="110" HeightRequest="110"
-                                                     Margin="0,5"
+                                                     WidthRequest="124" HeightRequest="124"
                                                      VerticalOptions="Center"/>
                         </Grid>
                     </Border>
 
-                    <Label Text="AI is not sure that this is food."
-                           IsVisible="{Binding AnalysisResult.IsFood, Converter={StaticResource InvertedBoolConverter}}"
-                           TextColor="Red" HorizontalOptions="Center" FontAttributes="Bold"/>
+                    <!-- Not food -->
+                    <Border Style="{StaticResource Card}"
+                            IsVisible="{Binding AnalysisResult.IsFood, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Text="This doesn't look like food. Try another photo."
+                               Style="{StaticResource Body}" TextColor="{AppThemeBinding Light={StaticResource Ink}, Dark={StaticResource DarkInk}}"
+                               HorizontalOptions="Center"/>
+                    </Border>
 
-                    <Label Text="Ingredients" Style="{StaticResource HeaderLabel}"
-                           HorizontalOptions="Start" Margin="5,0"
-                           IsVisible="{Binding AnalysisResult.IsFood}"/>
+                    <!-- Ingredients -->
+                    <Label Style="{StaticResource SectionLabel}"
+                           IsVisible="{Binding AnalysisResult.IsFood}"
+                           Text="{Binding AnalysisResult.Ingredients.Count, StringFormat='Ingredients · {0}'}"/>
 
                     <CollectionView ItemsSource="{Binding AnalysisResult.Ingredients}"
-                                    ItemsLayout="VerticalList"
                                     IsVisible="{Binding AnalysisResult.IsFood}">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                        </CollectionView.ItemsLayout>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:Ingredient">
-                                <Border StrokeShape="RoundRectangle 12" 
-                                        Margin="0,0,0,10" 
-                                        Padding="15" 
-                                        BackgroundColor="White"
-                                        StrokeThickness="0">
-                                    <VerticalStackLayout Spacing="5">
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <Label Grid.Column="0" Text="{Binding Name}" FontAttributes="Bold" FontSize="16"/>
-                                            <Label Grid.Column="1" Text="{Binding Calories, StringFormat='{0} kcal'}" TextColor="Gray"/>
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="14">
+                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                                            <Label Grid.Column="0" Text="{Binding Name}"
+                                                   Style="{StaticResource CardTitle}"
+                                                   LineBreakMode="TailTruncation" MaxLines="1"
+                                                   VerticalOptions="Center"/>
+                                            <Label Grid.Column="1" VerticalOptions="Center"
+                                                   Text="{Binding Calories, StringFormat='{0} kcal'}"
+                                                   FontFamily="HankenBold" FontSize="14"
+                                                   TextColor="{AppThemeBinding Light={StaticResource BrandStrong}, Dark={StaticResource BrandOnDark}}"/>
                                         </Grid>
-                                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,5,0,0">
-                                            <VerticalStackLayout Grid.Column="0">
-                                                <Label Text="Proteins" FontSize="10" TextColor="Gray"/>
-                                                <Label Text="{Binding Protein, StringFormat='{0}g'}"/>
-                                                <ProgressBar Progress="{Binding Protein, Converter={converters:MacroToProgressConverter Max=50}}" ProgressColor="Orange"/>
+
+                                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                                            <!-- Protein -->
+                                            <VerticalStackLayout Grid.Column="0" Spacing="5">
+                                                <Label Text="Protein" FontFamily="HankenMedium" FontSize="11.5" TextColor="{AppThemeBinding Light={StaticResource Ink3}, Dark={StaticResource DarkInk3}}"/>
+                                                <Label Text="{Binding Protein, StringFormat='{0:F0}g'}" FontFamily="HankenBold" FontSize="17" TextColor="{AppThemeBinding Light={StaticResource Ink}, Dark={StaticResource DarkInk}}"/>
+                                                <Border StrokeThickness="0" HeightRequest="5" BackgroundColor="{StaticResource ProteinTint}">
+                                                    <Border.StrokeShape><RoundRectangle CornerRadius="999"/></Border.StrokeShape>
+                                                    <ProgressBar Progress="{Binding Protein, Converter={converters:MacroToProgressConverter Max=50}}"
+                                                                 ProgressColor="{StaticResource Protein}" BackgroundColor="Transparent"/>
+                                                </Border>
                                             </VerticalStackLayout>
-                                            <VerticalStackLayout Grid.Column="1">
-                                                <Label Text="Fats" FontSize="10" TextColor="Gray"/>
-                                                <Label Text="{Binding Fat, StringFormat='{0}g'}"/>
-                                                <ProgressBar Progress="{Binding Fat, Converter={converters:MacroToProgressConverter Max=50}}" ProgressColor="Red"/>
+                                            <!-- Fat -->
+                                            <VerticalStackLayout Grid.Column="1" Spacing="5">
+                                                <Label Text="Fat" FontFamily="HankenMedium" FontSize="11.5" TextColor="{AppThemeBinding Light={StaticResource Ink3}, Dark={StaticResource DarkInk3}}"/>
+                                                <Label Text="{Binding Fat, StringFormat='{0:F0}g'}" FontFamily="HankenBold" FontSize="17" TextColor="{AppThemeBinding Light={StaticResource Ink}, Dark={StaticResource DarkInk}}"/>
+                                                <Border StrokeThickness="0" HeightRequest="5" BackgroundColor="{StaticResource FatTint}">
+                                                    <Border.StrokeShape><RoundRectangle CornerRadius="999"/></Border.StrokeShape>
+                                                    <ProgressBar Progress="{Binding Fat, Converter={converters:MacroToProgressConverter Max=50}}"
+                                                                 ProgressColor="{StaticResource Fat}" BackgroundColor="Transparent"/>
+                                                </Border>
                                             </VerticalStackLayout>
-                                            <VerticalStackLayout Grid.Column="2">
-                                                <Label Text="Carbs" FontSize="10" TextColor="Gray"/>
-                                                <Label Text="{Binding Carbs, StringFormat='{0}g'}"/>
-                                                <ProgressBar Progress="{Binding Carbs, Converter={converters:MacroToProgressConverter Max=100}}" ProgressColor="Green"/>
+                                            <!-- Carbs -->
+                                            <VerticalStackLayout Grid.Column="2" Spacing="5">
+                                                <Label Text="Carbs" FontFamily="HankenMedium" FontSize="11.5" TextColor="{AppThemeBinding Light={StaticResource Ink3}, Dark={StaticResource DarkInk3}}"/>
+                                                <Label Text="{Binding Carbs, StringFormat='{0:F0}g'}" FontFamily="HankenBold" FontSize="17" TextColor="{AppThemeBinding Light={StaticResource Ink}, Dark={StaticResource DarkInk}}"/>
+                                                <Border StrokeThickness="0" HeightRequest="5" BackgroundColor="{StaticResource CarbsTint}">
+                                                    <Border.StrokeShape><RoundRectangle CornerRadius="999"/></Border.StrokeShape>
+                                                    <ProgressBar Progress="{Binding Carbs, Converter={converters:MacroToProgressConverter Max=100}}"
+                                                                 ProgressColor="{StaticResource Carbs}" BackgroundColor="Transparent"/>
+                                                </Border>
                                             </VerticalStackLayout>
                                         </Grid>
                                     </VerticalStackLayout>
@@ -169,7 +248,9 @@
                     </CollectionView>
                 </VerticalStackLayout>
 
-                <Label Text="{Binding ResultText}" IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" TextColor="Gray" HorizontalOptions="Center"/>
+                <Label Text="{Binding ResultText}"
+                       IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                       Style="{StaticResource CaptionMuted}" HorizontalOptions="Center"/>
 
             </VerticalStackLayout>
         </ScrollView>

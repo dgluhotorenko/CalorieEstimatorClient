@@ -8,13 +8,20 @@ namespace CalorieClient.ViewModels;
 
 public partial class MainViewModel(ICalorieService calorieService, IHistoryService historyService) : ObservableObject
 {
+    private FileResult? _selectedPhoto;
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasImage))]
+    [NotifyCanExecuteChangedFor(nameof(EstimateCaloriesCommand))]
     private string? _imagePath;
+
+    public bool HasImage => !string.IsNullOrEmpty(ImagePath);
 
     [ObservableProperty]
     private string? _userNotes;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(EstimateCaloriesCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -32,7 +39,7 @@ public partial class MainViewModel(ICalorieService calorieService, IHistoryServi
         var photo = (await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 1 })).FirstOrDefault();
 
         if (photo != null)
-            await AnalyzeAsync(photo);
+            SelectPhoto(photo);
     }
 
     [RelayCommand]
@@ -44,12 +51,30 @@ public partial class MainViewModel(ICalorieService calorieService, IHistoryServi
         var photo = await MediaPicker.Default.CapturePhotoAsync();
 
         if (photo != null)
-            await AnalyzeAsync(photo);
+            SelectPhoto(photo);
     }
+
+    // Step 1 — stage the photo for review; analysis happens on demand (step 2).
+    private void SelectPhoto(FileResult photo)
+    {
+        _selectedPhoto = photo;
+        ImagePath = photo.FullPath;
+        AnalysisResult = null;
+        ResultText = null;
+    }
+
+    // Step 2 — analyse the staged photo.
+    [RelayCommand(CanExecute = nameof(CanEstimate))]
+    private async Task EstimateCalories()
+    {
+        if (_selectedPhoto != null)
+            await AnalyzeAsync(_selectedPhoto);
+    }
+
+    private bool CanEstimate() => HasImage && !IsBusy;
 
     private async Task AnalyzeAsync(FileResult photo)
     {
-        ImagePath = photo.FullPath;
         IsBusy = true;
         ResultText = "Analyzing...";
         AnalysisResult = null;
